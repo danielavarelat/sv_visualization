@@ -94,9 +94,6 @@ def create_imagen(outdir, rows_show, selected_svs, df_out, df_path, dict_annotat
 
 def get_df_full(outdir, samples_ids):
     """Get a dataframe with ALL the information about the variants."""
-#     with open(join(outdir, "names.txt")) as n:
-#         list_names = n.readlines()
-#     names = [word.strip() for word in list_names]
     columns_df = (
         [
             "svs",
@@ -118,7 +115,6 @@ def get_df_full(outdir, samples_ids):
     )
     svs_table = join(outdir, "merged_svs_annot.tsv")
     df_in = pd.read_csv(svs_table, sep="\t", header=None, names=columns_df)
-#     df_in.insert(0, "names_files", names)
     df_full = df_in
     return df_full
 
@@ -126,14 +122,16 @@ def add_names_files(outdir, samples_ids):
     path=join(outdir, samples_ids[0], "snapshots")
     allfiles = [f for f in listdir(path) if isfile(join(path, f))]    
     allfiles.remove('igvbatch_0.txt')
+    #without .png
     files = [i.split(".")[0] for i in allfiles]
     d={}
     for i in files:
-        vals=[float(x) if x != "X" else 24 for x in i.split("_")[0:2] ]
+        vals=[float(x) if x != "X" else 24 for x in i.split("_")]
+        vals= vals[0:4]
         d[i]=vals
 # ORDER VALUES ACCORDING TO CHROMOSOME AND POSITION
     values = [ k for k in d.values() ]
-    values.sort(key = lambda l: (l[0], l[1]))
+    values.sort(key = lambda l: (l[0], l[1], l[2], l[3]))
     order_files=[]
     for value in values:
         for file in files:
@@ -190,16 +188,21 @@ def filtered(outdir):
 
 
 
-# outdir="/work/isabl/home/mccartej/p230_isabl/analysis/SV_SNAP_TEST/I-H-134731"
-# samples_ids=["I-H-134731-N1-1-D1-1", "I-H-134731-T1-1-D1-1","I-H-134731-T2-1-D1-1", "I-H-134731-T3-1-D1-1","I-H-134731-T4-1-D1-1", "I-H-134731-T5-1-D1-1","I-H-134731-T6-1-D1-1"]
-# df_out=get_df_full(outdir, samples_ids)
-# svs, table = filtered(outdir)
-# df_out_filt = df_out[df_out["name"].isin(svs)]
-# order_files = add_names_files(outdir, samples_ids)
-# df_out_filt.insert(0, "names_files", order_files)
-# df_svs, df_path, dict_annotation=make_grids(outdir, samples_ids, df_out_filt)
+outdir="/work/isabl/home/mccartej/p230_isabl/analysis/I-H-136593/svs"
+samples_ids=["I-H-136593-N1-1-D1-1", "I-H-136593-T1-1-D1-1","I-H-136593-T2-1-D1-1"]
+df_out=get_df_full(outdir, samples_ids)
+# print(df_out)
+svs, table = filtered(outdir)
 
-# grid=create_imagen(outdir, samples_ids, svs, df_out_filt, df_path, dict_annotation)
-# img_path="/home/varelad/test_731_joseph.png"
-# grid.save(img_path)
-# print(img_path)
+df_out_filt = df_out[df_out["name"].isin(svs)]
+# print(df_out_filt)
+order_files = add_names_files(outdir, samples_ids)
+# print(order_files)
+df_out_filt.insert(0, "names_files", order_files)
+print(df_out_filt)
+df_svs, df_path, dict_annotation=make_grids(outdir, samples_ids, df_out_filt)
+
+grid=create_imagen(outdir, samples_ids, svs, df_out_filt, df_path, dict_annotation)
+img_path="/home/varelad/136593.png"
+grid.save(img_path)
+print(img_path)
